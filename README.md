@@ -1,6 +1,9 @@
 # nicehashpi
 DIY Raspberry PI Display for Nicehash stats
 
+![alt text](https://github.com/ElectronicZebra/nicehashpi/blob/main/img.PNG?raw=true)
+
+
 Prerequisites :
 1. RaspberryPi 3b+ or higher
 2. RaspberryPi 3.5 inch SPI TFT LCD Display
