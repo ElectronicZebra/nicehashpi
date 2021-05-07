@@ -6,7 +6,7 @@ const log = console.log;
 const { apiConf, btcAddress } = require('./config')
 
 //text style
-var style1 = {
+const style1 = {
     font: 'block',              // define the font face
     align: 'center',              // define text alignment
     colors: ['greenBright'],         // define all colors
@@ -24,18 +24,25 @@ var style1 = {
 // BTC rate url 
 const btc2usd_url = "https://bitpay.com/api/rates";
 
-
 //global variables
 const { default: Api } = require("./api");
 let api = new Api(apiConf);
-var totalBTCBalance = 0.0;
-var rate = 1;
-var wokerDetails = [];
-var profitability = 0.00;
-var global_error = "";
+let totalBTCBalance = 0.0;
+let rate = 1;
+let wokerDetails = [];
+let profitability = 0.00;
+let global_error = "";
+
+// Interval timer
+const timer = {
+    displayRefresh: 3000, // 3 sec
+    btc2USDRate: 1000 * 60 * 30, // 30 min
+    niceHashBalance: 1000 * 60 * 4, // 4 min
+    workerDetails: 1000 * 10 * 1 // 10 sec
+}
 
 //display
-setInterval(() => {
+const display = setInterval(() => {
     console.clear();
     dp = Math.round(rate * profitability * 100) / 100;
     CFonts.say('$' + dp, style1);
@@ -50,24 +57,9 @@ setInterval(() => {
             + chalk.blue.bold(w.rigName) + chalk.gray.bold(' @ ') + chalk.redBright.bold((Math.round(w.speedAccepted * 100) / 100).toFixed(2))
         )
     });
-}, 3000);
+}, timer.displayRefresh);
 
-//BTC to usd rate
-setInterval(() => {
-    getBTC2USDRate();
-}, 1000 * 60 * 30);
-
-//get NH balance
-setInterval(() => {
-    getNiceHashBalance();
-}, 1000 * 60 * 4);
-
-//get worker Details
-setInterval(() => {
-    getWorkerDetails();
-}, 1000 * 10 * 1);
-
-var getBTC2USDRate = function () {
+const getBTC2USDRate = function () {
     https.get(btc2usd_url, (res) => {
         let body = "";
         res.on("data", (chunk) => {
@@ -94,7 +86,7 @@ var getBTC2USDRate = function () {
     });
 }
 
-var getNiceHashBalance = function () {
+const getNiceHashBalance = function () {
     api.getTime().then(function () {
         api.get('/main/api/v2/accounting/account2/BTC').then(function (res) {
             //console.dir(res);
@@ -103,7 +95,7 @@ var getNiceHashBalance = function () {
     });
 }
 
-var getWorkerDetails = function () {
+const getWorkerDetails = function () {
     api.getTime().then(function () {
         api.get('/main/api/v2/mining/external/' + btcAddress + '/rigs/activeWorkers').then(function (res) {
 
@@ -126,3 +118,18 @@ var getWorkerDetails = function () {
 getBTC2USDRate();
 getNiceHashBalance();
 getWorkerDetails();
+
+//BTC to usd rate
+const btc2USDRateInterval = setInterval(() => {
+    getBTC2USDRate();
+}, timer.btc2USDRate);
+
+//get NH balance
+const niceHashBalanceInterval = setInterval(() => {
+    getNiceHashBalance();
+}, timer.niceHashBalance);
+
+//get worker Details
+const workerDetailsInterval = setInterval(() => {
+    getWorkerDetails();
+}, timer.workerDetails);
