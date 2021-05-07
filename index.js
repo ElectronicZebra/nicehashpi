@@ -3,6 +3,7 @@ const https = require('https');
 const CFonts = require('cfonts');
 const chalk = require('chalk');
 const log = console.log;
+const { apiConf, btcAddress } = require('./config')
 
 //text style
 var style1 = {
@@ -20,24 +21,13 @@ var style1 = {
     env: 'node'                 // define the environment CFonts is being executed in
 };
 
-//nicehash config
-const conf = {
-    apiHost: 'https://api2.nicehash.com', //use https://api2.nicehash.com for production
-    apiKey: 'X', //get it here: https://test.nicehash.com/my/settings/keys or https://new.nicehash.com/my/settings/keys
-    apiSecret: 'X',
-    orgId: 'X',
-}
-
-//nicehash Wallet address
-var BTCAddress = 'X';
-
 // BTC rate url 
 const btc2usd_url = "https://bitpay.com/api/rates";
 
 
 //global variables
 const { default: Api } = require("./api");
-let api = new Api(conf);
+let api = new Api(apiConf);
 var totalBTCBalance = 0.0;
 var rate = 1;
 var wokerDetails = [];
@@ -115,7 +105,7 @@ var getNiceHashBalance = function () {
 
 var getWorkerDetails = function () {
     api.getTime().then(function () {
-        api.get('/main/api/v2/mining/external/' + BTCAddress + '/rigs/activeWorkers').then(function (res) {
+        api.get('/main/api/v2/mining/external/' + btcAddress + '/rigs/activeWorkers').then(function (res) {
 
             wokerDetails = [];
             profitability = 0;
