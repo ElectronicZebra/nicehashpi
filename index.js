@@ -31,13 +31,14 @@ let totalBTCBalance = 0.0;
 let rate = 1;
 let wokerDetails = [];
 let profitability = 0.00;
-let global_error = "";
+let global_error = undefined;
+let BTC2USD_error = undefined;
 
 // Interval timer
 const timer = {
     displayRefresh: 3000, // 3 sec
     btc2USDRate: 1000 * 60 * 30, // 30 min
-    niceHashBalance: 1000 * 60 * 4, // 4 min
+    niceHashBalance: 1000 * 60 * 5, // 5 min
     workerDetails: 1000 * 10 * 1 // 10 sec
 }
 
@@ -57,6 +58,10 @@ const display = setInterval(() => {
             + chalk.blue.bold(w.rigName) + chalk.gray.bold(' @ ') + chalk.redBright.bold((Math.round(w.speedAccepted * 100) / 100).toFixed(2))
         )
     });
+    if (global_error !== undefined)
+        log(chalk.whiteBright.bgRed('Error:') + global_error);
+    if (BTC2USD_error !== undefined)
+        log(chalk.whiteBright.bgRed('Error: Cannot get BTC2USD Rate:') + BTC2USD_error);
 }, timer.displayRefresh);
 
 const getBTC2USDRate = function () {
@@ -68,29 +73,30 @@ const getBTC2USDRate = function () {
         res.on("end", () => {
             try {
                 let json = JSON.parse(body);
-                //console.dir(json);
+                BTC2USD_error = 'BTC to USD rate not found!';
                 for (var key in json) {
                     if (json[key].code == 'USD') {
                         //console.log(json[key]);
                         rate = json[key].rate;
+                        BTC2USD_error = undefined;
                         break;
                     }
                 }
             } catch (error) {
-                global_error += error.message;
+                BTC2USD_error = error.message;
             };
         });
 
     }).on("error", (error) => {
-        global_error += error.message;
+        BTC2USD_error = error.message;
     });
 }
 
 const getNiceHashBalance = function () {
     api.getTime().then(function () {
         api.get('/main/api/v2/accounting/account2/BTC').then(function (res) {
-            //console.dir(res);
             totalBTCBalance = res.totalBalance;
+            global_error = undefined;
         });
     });
 }
@@ -98,7 +104,6 @@ const getNiceHashBalance = function () {
 const getWorkerDetails = function () {
     api.getTime().then(function () {
         api.get('/main/api/v2/mining/external/' + btcAddress + '/rigs/activeWorkers').then(function (res) {
-
             wokerDetails = [];
             profitability = 0;
             for (var key in res.workers) {
@@ -109,6 +114,7 @@ const getWorkerDetails = function () {
                 details["profitability"] = res.workers[key].profitability;
                 profitability += res.workers[key].profitability;
                 wokerDetails.push(details);
+                global_error = undefined;
             }
         });
     });
@@ -133,3 +139,8 @@ const niceHashBalanceInterval = setInterval(() => {
 const workerDetailsInterval = setInterval(() => {
     getWorkerDetails();
 }, timer.workerDetails);
+
+//prevent crashing
+process.on('uncaughtException', function (err) {
+    global_error = err.message;
+});
