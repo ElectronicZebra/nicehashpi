@@ -4,7 +4,7 @@ const CFonts = require('cfonts');
 const chalk = require('chalk');
 const _ = require('lodash');
 const log = console.log;
-const { apiConf, coinbaseConf, btcAddress ***REMOVED*** = require('./config')
+const { apiConf, coinbaseConf, btcAddress } = require('./config')
 
 //text style
 const style1 = {
@@ -20,14 +20,14 @@ const style1 = {
     independentGradient: false, // define if you want to recalculate the gradient for each new line
     transitionGradient: false,  // define if this is a transition between colors directly
     env: 'node'                 // define the environment CFonts is being executed in
-***REMOVED***;
+};
 
 // BTC rate url 
 const btc2usd_url = "https://bitpay.com/api/rates";
 
 //global variables
-const { default: Api ***REMOVED*** = require("./api");
-const { default: CoinbaseApi ***REMOVED*** = require("./coinbase-api");
+const { default: Api } = require("./api");
+const { default: CoinbaseApi } = require("./coinbase-api");
 let api = new Api(apiConf);
 let coinbaseApi = new CoinbaseApi(coinbaseConf);
 let totalBTCBalance = 0.0;
@@ -45,7 +45,7 @@ const timer = {
     niceHashBalance: 1000 * 60 * 5, // 5 min
     coinbaseBalance: 1000 * 60 * 5, // 5 min
     workerDetails: 1000 * 10 * 1 // 10 sec
-***REMOVED***
+}
 
 //display
 const display = setInterval(() => {
@@ -65,19 +65,19 @@ const display = setInterval(() => {
             + chalk.green.bold('$ ' + (Math.round(rate * w.profitability * 100) / 100).toFixed(2)) + chalk.gray.bold(' | ')
             + chalk.blue.bold(w.rigName) + chalk.gray.bold(' @ ') + chalk.redBright.bold((Math.round(w.speedAccepted * 100) / 100).toFixed(2))
         )
-    ***REMOVED***);
+    });
     if (global_error !== undefined)
         log(chalk.whiteBright.bgRed('Error:') + global_error);
     if (BTC2USD_error !== undefined)
         log(chalk.whiteBright.bgRed('Error: Cannot get BTC2USD Rate:') + BTC2USD_error);
-***REMOVED***, timer.displayRefresh);
+}, timer.displayRefresh);
 
 const getBTC2USDRate = function () {
     https.get(btc2usd_url, (res) => {
         let body = "";
         res.on("data", (chunk) => {
             body += chunk;
-        ***REMOVED***);
+        });
         res.on("end", () => {
             try {
                 let json = JSON.parse(body);
@@ -88,37 +88,37 @@ const getBTC2USDRate = function () {
                         rate = json[key].rate;
                         BTC2USD_error = undefined;
                         break;
-                    ***REMOVED***
-                ***REMOVED***
-            ***REMOVED*** catch (error) {
+                    }
+                }
+            } catch (error) {
                 BTC2USD_error = error.message;
-            ***REMOVED***;
-        ***REMOVED***);
+            };
+        });
 
-    ***REMOVED***).on("error", (error) => {
+    }).on("error", (error) => {
         BTC2USD_error = error.message;
-    ***REMOVED***);
-***REMOVED***
+    });
+}
 
 const getNiceHashBalance = function () {
     api.getTime().then(function () {
         api.get('/main/api/v2/accounting/account2/BTC').then(function (res) {
             totalBTCBalance = res.totalBalance;
             global_error = undefined;
-        ***REMOVED***);
-    ***REMOVED***);
-***REMOVED***
+        });
+    });
+}
 
 const getCoinbaseBalance = function () {
 	coinbaseApi.get('/v2/accounts').then(function (res) {
 		var data = res.data;
-		data = _.filter(data, { 'type': 'wallet'***REMOVED***);
-		data = _.filter(data, { 'currency': { 'code': 'BTC' ***REMOVED******REMOVED***);
+		data = _.filter(data, { 'type': 'wallet'});
+		data = _.filter(data, { 'currency': { 'code': 'BTC' }});
 
 		totalCoinbaseBTCBalance = data[0].balance.amount;
 		global_error = undefined;
-	***REMOVED***);
-***REMOVED***
+	});
+}
 
 const getWorkerDetails = function () {
     api.getTime().then(function () {
@@ -126,7 +126,7 @@ const getWorkerDetails = function () {
             wokerDetails = [];
             profitability = 0;
             for (var key in res.workers) {
-                var details = {***REMOVED***
+                var details = {}
                 details["rigName"] = res.workers[key].rigName;
                 details["speedAccepted"] = res.workers[key].speedAccepted;
                 details["unpaidAmount"] = res.workers[key].unpaidAmount;
@@ -134,10 +134,10 @@ const getWorkerDetails = function () {
                 profitability += res.workers[key].profitability;
                 wokerDetails.push(details);
                 global_error = undefined;
-            ***REMOVED***
-        ***REMOVED***);
-    ***REMOVED***);
-***REMOVED***
+            }
+        });
+    });
+}
 
 //first call
 getBTC2USDRate();
@@ -148,24 +148,24 @@ getWorkerDetails();
 //BTC to usd rate
 const btc2USDRateInterval = setInterval(() => {
     getBTC2USDRate();
-***REMOVED***, timer.btc2USDRate);
+}, timer.btc2USDRate);
 
 //get NH balance
 const niceHashBalanceInterval = setInterval(() => {
     getNiceHashBalance();
-***REMOVED***, timer.niceHashBalance);
+}, timer.niceHashBalance);
 
 //get worker Details
 const workerDetailsInterval = setInterval(() => {
     getWorkerDetails();
-***REMOVED***, timer.workerDetails);
+}, timer.workerDetails);
 
 //get CB balance
 const coinbaseBalanceInterval = setInterval(() => {
 	getCoinbaseBalance();
-***REMOVED***, timer.coinbaseBalance);
+}, timer.coinbaseBalance);
 
 //prevent crashing
 process.on('uncaughtException', function (err) {
     global_error = err.message;
-***REMOVED***);
+});

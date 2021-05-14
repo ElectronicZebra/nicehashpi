@@ -9,12 +9,12 @@ function createNonce() {
 	var s = '', length = 32;
 	do {
 		s += Math.random().toString(36).substr(2);
-	***REMOVED*** while (s.length < length);
+	} while (s.length < length);
 	s = s.substr(0, length);
 	return s;
-***REMOVED***
+}
 
-const getAuthHeader = (apiKey, apiSecret, time, nonce, organizationId = '', request = {***REMOVED***) => {
+const getAuthHeader = (apiKey, apiSecret, time, nonce, organizationId = '', request = {}) => {
 	const hmac = CryptoJS.algo.HMAC.create(CryptoJS.algo.SHA256, apiSecret);
 
 	hmac.update(apiKey);
@@ -35,43 +35,43 @@ const getAuthHeader = (apiKey, apiSecret, time, nonce, organizationId = '', requ
 	if (request.body) {
 		hmac.update("\0");
 		hmac.update(typeof request.body == 'object' ? JSON.stringify(request.body) : request.body);
-	***REMOVED***
+	}
 
 	return apiKey + ':' + hmac.finalize().toString(CryptoJS.enc.Hex);
-***REMOVED***;
+};
 
 
 class Api {
 
-	constructor({ locale, apiHost, apiKey, apiSecret, orgId ***REMOVED***) {
+	constructor({ locale, apiHost, apiKey, apiSecret, orgId }) {
 		this.locale = locale || 'en';
 		this.host = apiHost;
 		this.key = apiKey;
 		this.secret = apiSecret;
 		this.org = orgId;
 		this.localTimeDiff = null;
-	***REMOVED***
+	}
 
 	getTime() {
 		return request({
 			uri: this.host + '/api/v2/time',
 			json: true
-		***REMOVED***)
+		})
 			.then(res => {
 				this.localTimeDiff = res.serverTime - (+new Date());
 				this.time = res.serverTime;
 				return res;
-			***REMOVED***);
-	***REMOVED***
+			});
+	}
 
-	apiCall(method, path, { query, body, time ***REMOVED*** = {***REMOVED***) {
+	apiCall(method, path, { query, body, time } = {}) {
 		if (this.localTimeDiff === null) {
 			return Promise.reject(new Error('Get server time first .getTime()'));
-		***REMOVED***
+		}
 
 		// query in path
 		var [pathOnly, pathQuery] = path.split('?');
-		if (pathQuery) query = { ...qs.parse(pathQuery), ...query ***REMOVED***;
+		if (pathQuery) query = { ...qs.parse(pathQuery), ...query };
 
 		const nonce = createNonce();
 		const timestamp = (time || (+new Date() + this.localTimeDiff)).toString();
@@ -90,32 +90,32 @@ class Api {
 					path: pathOnly,
 					query,
 					body,
-				***REMOVED***)
-			***REMOVED***,
+				})
+			},
 			qs: query,
 			body,
 			json: true
-		***REMOVED***
+		}
 
 		return request(options);
-	***REMOVED***
+	}
 
 	get(path, options) {
 		return this.apiCall('GET', path, options)
-	***REMOVED***
+	}
 
 	post(path, options) {
 		return this.apiCall('POST', path, options)
-	***REMOVED***
+	}
 
 	put(path, options) {
 		return this.apiCall('PUT', path, options)
-	***REMOVED***
+	}
 
 	delete(path, options) {
 		return this.apiCall('DELETE', path, options)
-	***REMOVED***
+	}
 
-***REMOVED***
+}
 
 export default Api
