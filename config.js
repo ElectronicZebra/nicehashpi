@@ -7,9 +7,9 @@ module.exports = {
         orgId: 'x',
     },
     coinbaseConf: {
-	apiHost: 'https://api.coinbase.com',
-	apiKey: 'x',
-	apiSecret: 'x'
+	    apiHost: 'https://api.coinbase.com',
+	    apiKey: 'x',
+	    apiSecret: 'x'
     },
     //nicehash Wallet address
     btcAddress: 'x'
