@@ -2,8 +2,9 @@ require = require("esm")(module/*, options*/);
 const https = require('https');
 const CFonts = require('cfonts');
 const chalk = require('chalk');
+const _ = require('lodash');
 const log = console.log;
-const { apiConf, btcAddress } = require('./config')
+const { apiConf, coinbaseConf, btcAddress } = require('./config')
 
 //text style
 const style1 = {
@@ -26,8 +27,11 @@ const btc2usd_url = "https://bitpay.com/api/rates";
 
 //global variables
 const { default: Api } = require("./api");
+const { default: CoinbaseApi } = require("./coinbase-api");
 let api = new Api(apiConf);
+let coinbaseApi = new CoinbaseApi(coinbaseConf);
 let totalBTCBalance = 0.0;
+let totalCoinbaseBTCBalance = 0.0;
 let rate = 1;
 let wokerDetails = [];
 let profitability = 0.00;
@@ -39,6 +43,7 @@ const timer = {
     displayRefresh: 3000, // 3 sec
     btc2USDRate: 1000 * 60 * 30, // 30 min
     niceHashBalance: 1000 * 60 * 5, // 5 min
+    coinbaseBalance: 1000 * 60 * 5, // 5 min
     workerDetails: 1000 * 10 * 1 // 10 sec
 }
 
@@ -47,8 +52,11 @@ const display = setInterval(() => {
     console.clear();
     dp = Math.round(rate * profitability * 100) / 100;
     CFonts.say('$' + dp, style1);
-    log(chalk.whiteBright.bgRed('Wallet'));
+    log(chalk.whiteBright.bgRed('NiceHash'));
     log(chalk.green.bold('BTC : ') + chalk.green.bold(totalBTCBalance) + chalk.gray.bold(' | ') + chalk.green.bold('USD : ') + chalk.green.bold('$ ' + Math.round(rate * totalBTCBalance * 100) / 100));
+    console.log(' ');
+    log(chalk.whiteBright.bgRed('Coinbase'));
+    log(chalk.green.bold('BTC : ') + chalk.green.bold(totalCoinbaseBTCBalance) + chalk.gray.bold(' | ') + chalk.green.bold('USD : ') + chalk.green.bold('$ ' + Math.round(rate * totalCoinbaseBTCBalance * 100) / 100));
     console.log(' ');
     log(chalk.whiteBright.bgRed('Workers'));
     wokerDetails.forEach(w => {
@@ -101,6 +109,17 @@ const getNiceHashBalance = function () {
     });
 }
 
+const getCoinbaseBalance = function () {
+	coinbaseApi.get('/v2/accounts').then(function (res) {
+		var data = res.data;
+		data = _.filter(data, { 'type': 'wallet'});
+		data = _.filter(data, { 'currency': { 'code': 'BTC' }});
+
+		totalCoinbaseBTCBalance = data[0].balance.amount;
+		global_error = undefined;
+	});
+}
+
 const getWorkerDetails = function () {
     api.getTime().then(function () {
         api.get('/main/api/v2/mining/external/' + btcAddress + '/rigs/activeWorkers').then(function (res) {
@@ -123,6 +142,7 @@ const getWorkerDetails = function () {
 //first call
 getBTC2USDRate();
 getNiceHashBalance();
+getCoinbaseBalance();
 getWorkerDetails();
 
 //BTC to usd rate
@@ -139,6 +159,11 @@ const niceHashBalanceInterval = setInterval(() => {
 const workerDetailsInterval = setInterval(() => {
     getWorkerDetails();
 }, timer.workerDetails);
+
+//get CB balance
+const coinbaseBalanceInterval = setInterval(() => {
+	getCoinbaseBalance();
+}, timer.coinbaseBalance);
 
 //prevent crashing
 process.on('uncaughtException', function (err) {
