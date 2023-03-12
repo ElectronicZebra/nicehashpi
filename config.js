@@ -6,6 +6,11 @@ module.exports = {
         apiSecret: 'x',
         orgId: 'x',
     },
+    coinbaseConf: {
+	    apiHost: 'https://api.coinbase.com',
+	    apiKey: 'x',
+	    apiSecret: 'x'
+    },
     //nicehash Wallet address
     btcAddress: 'x'
 }
